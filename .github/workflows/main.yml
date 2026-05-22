@@ -1,0 +1,50 @@
+name: Build TWRP for Lenya
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Install Build Tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gnupg gperf imagecreator lib32ncurses5-dev lib32readline-dev lib32z1-dev liblz4-tool libncurses5 libncurses5-dev libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync schedtool squashfs-tools xsltproc zip zlib1g-dev
+
+    - name: Install Repo tool
+      run: |
+        mkdir ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+
+    - name: Sync TWRP Minimal Source
+      run: |
+        export PATH=~/bin:$PATH
+        mkdir twrp
+        cd twrp
+        repo init -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-6.0 --depth=1
+        repo sync -c -j$(nproc) --no-tags --no-clone-bundle --depth=1
+
+    - name: Inject Lenya Device Tree
+      run: |
+        cd twrp
+        mkdir -p device/lenovo/lenya
+        cp -r ../* device/lenovo/lenya/ || true
+
+    - name: Building Recovery
+      run: |
+        cd twrp
+        export ALLOW_MISSING_DEPENDENCIES=true
+        . build/envsetup.sh
+        lunch omni_lenya-eng
+        make recoveryimage -j$(nproc)
+
+    - name: Upload Result
+      uses: actions/upload-artifact@v3
+      with:
+        name: TWRP-Lenya-Image
+        path: twrp/out/target/product/lenya/recovery.img
