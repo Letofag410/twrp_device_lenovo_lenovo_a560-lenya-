@@ -1,10 +1,14 @@
-# Android device tree for Lenovo Lenovo A560 (msm8610)
-
-```
 #
 # Copyright (C) 2026 The Android Open Source Project
 # Copyright (C) 2026 SebaUbuntu's TWRP device tree generator
 #
 # SPDX-License-Identifier: Apache-2.0
 #
-```
+
+PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/omni_lenya.mk
+
+COMMON_LUNCH_CHOICES := \
+    omni_msm8610-user \
+    omni_msm8610-userdebug \
+    omni_msm8610-eng
